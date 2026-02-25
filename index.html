@@ -1,0 +1,1081 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Taylor Rig · Production Flow & Materials Planning Improvement</title>
+  <meta name="description" content="Delivered operations improvement project: lead-time reduction, throughput gains, WIP control, and demand-driven materials planning." />
+
+  <style>
+    :root{
+      --bg:#ffffff;
+      --ink:#0b1220;
+      --muted:#5b667a;
+      --line:#e6e9ef;
+      --line2:#dbe1ea;
+      --card:#f8fafc;
+      --card2:#ffffff;
+      --accent:#1f4fd1;
+      --accent2:#0f766e;
+      --shadow: 0 14px 40px rgba(11,18,32,.08);
+      --radius: 16px;
+      --radius2: 22px;
+      --maxw: 1060px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color:var(--ink);
+      background:var(--bg);
+      line-height:1.45;
+    }
+    a{color:inherit; text-decoration:none}
+    .wrap{max-width:var(--maxw); margin:0 auto; padding:28px 18px 70px}
+
+    /* Topbar */
+    .topbar{
+      position: sticky; top:0; z-index:30;
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--line);
+    }
+    .topbarInner{
+      max-width:var(--maxw);
+      margin:0 auto;
+      padding:12px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .brand{display:flex; align-items:center; gap:12px; min-width: 240px;}
+    .mark{
+      width:38px; height:38px; border-radius:12px;
+      background: var(--ink); color:#fff;
+      display:grid; place-items:center;
+      font-weight:900; letter-spacing:.6px; font-size:12px;
+    }
+    .brandText{display:flex; flex-direction:column; gap:2px}
+    .brandTitle{font-weight:900; font-size:13px}
+    .brandSub{font-size:12px; color:var(--muted)}
+
+    .nav{display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;}
+    .chipBtn{
+      border:1px solid var(--line2);
+      background:#fff;
+      padding:9px 11px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      color:var(--ink);
+      cursor:pointer;
+      transition: background .15s ease, transform .12s ease, border-color .15s ease;
+      display:inline-flex; align-items:center; gap:8px;
+      user-select:none;
+    }
+    .chipBtn:hover{background:#f3f6fb; transform: translateY(-1px)}
+    .chipBtn:active{transform: translateY(0px)}
+    .dot{width:8px; height:8px; border-radius:999px; background: var(--accent);}
+
+    .card{
+      border:1px solid var(--line);
+      border-radius: var(--radius2);
+      background: var(--card2);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .cardPad{padding:22px}
+
+    /* Hero */
+    .hero{margin-top:16px}
+    .kicker{display:flex; gap:8px; flex-wrap:wrap; font-size:12px; color:var(--muted);}
+    .pill{
+      font-size:11px; padding:4px 10px; border-radius:999px;
+      border:1px solid var(--line); background: var(--card);
+      color: var(--muted); font-weight:800;
+    }
+    h1{
+      margin:10px 0 10px;
+      font-size: clamp(24px, 3vw, 34px);
+      line-height:1.12;
+      letter-spacing:-.02em;
+    }
+    .lede{
+      margin:0;
+      font-size:14px;
+      color:var(--muted);
+      max-width: 92ch;
+      line-height:1.75;
+    }
+    .heroBtns{margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;}
+    .btn{
+      border:1px solid var(--line2);
+      background:#fff;
+      padding:11px 12px;
+      border-radius: 14px;
+      font-weight:900;
+      font-size:12px;
+      cursor:pointer;
+      transition: background .15s ease, transform .12s ease, border-color .15s ease;
+      display:inline-flex; align-items:center; gap:10px;
+    }
+    .btn.primary{
+      border-color: rgba(31,79,209,.25);
+      background: rgba(31,79,209,.08);
+      color: var(--ink);
+    }
+    .btn:hover{background:#f3f6fb; transform: translateY(-1px)}
+    .btn.primary:hover{background: rgba(31,79,209,.12)}
+    .btn:active{transform: translateY(0px)}
+
+    /* Impact */
+    .impact{background: var(--card); border-top:1px solid var(--line);}
+    .impactGrid{
+      padding:18px 22px 22px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 720px){
+      .impactGrid{grid-template-columns:1fr}
+      .metric.full{grid-column:auto}
+    }
+    .metric{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius: 16px;
+      padding:12px;
+    }
+    .metric .t{
+      font-family: var(--mono);
+      font-size:10px;
+      color: rgba(11,18,32,.55);
+      margin-bottom:6px;
+      display:inline-block;
+      padding:3px 8px;
+      border:1px solid var(--line);
+      background: #fafbfd;
+      border-radius: 999px;
+    }
+    .metric .v{font-weight:1000; font-size:18px; letter-spacing:-.01em;}
+    .metric .l{margin-top:4px; font-size:12px; color:var(--muted); line-height:1.45;}
+    .metric.full{grid-column:1 / span 2}
+
+    /* Sections */
+    .section{margin-top:22px}
+    .sectionHead{
+      display:flex; justify-content:space-between; align-items:flex-end;
+      margin:26px 2px 10px;
+      gap:12px;
+    }
+    .sectionHead h2{margin:0; font-size:16px; letter-spacing:-.01em;}
+    .sectionHead .hint{font-size:12px; color:var(--muted)}
+
+    /* Tabs */
+    .tabs{display:flex; gap:8px; flex-wrap:wrap}
+    .tab{
+      border:1px solid var(--line2);
+      background:#fff;
+      padding:9px 11px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:12px;
+      cursor:pointer;
+      transition: background .15s ease, transform .12s ease;
+      user-select:none;
+    }
+    .tab:hover{background:#f3f6fb; transform: translateY(-1px)}
+    .tab.active{
+      border-color: rgba(31,79,209,.35);
+      background: rgba(31,79,209,.10);
+    }
+
+    /* Workstreams layout */
+    .workGrid{
+      display:grid;
+      grid-template-columns: 1.05fr 0.95fr 0.9fr;
+      gap:14px;
+      align-items:start;
+      margin-top:12px;
+    }
+    @media (max-width: 1040px){
+      .workGrid{grid-template-columns:1fr}
+    }
+
+    .pane{padding:18px 18px 16px}
+    .pane h3{margin:0 0 10px; font-size:14px}
+    .pane p{margin:0; font-size:13px; color:var(--muted); line-height:1.75}
+
+    .list{
+      margin:12px 0 0;
+      padding:0;
+      list-style:none;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .li{
+      display:flex; gap:10px;
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius: 14px;
+      padding:10px 10px;
+      align-items:flex-start;
+    }
+    .bullet{
+      width:10px; height:10px;
+      border-radius:3px;
+      background: var(--accent2);
+      margin-top:6px;
+      flex: 0 0 auto;
+    }
+    .li .txt{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.65;
+    }
+    .li strong{color:var(--ink)}
+
+    .side{
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .miniCard{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius: 16px;
+      padding:14px;
+    }
+    .miniCard .ttl{font-weight:1000; font-size:12px}
+    .miniCard .sub{margin-top:6px; font-size:12px; color:var(--muted); line-height:1.7}
+
+    /* Chart */
+    .chartWrap{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius: 16px;
+      padding:12px;
+      position:sticky;
+      top:78px;
+    }
+    @media (max-width: 1040px){
+      .chartWrap{position:static}
+    }
+    .chartTop{
+      display:flex; justify-content:space-between; gap:10px;
+      align-items:flex-end;
+      margin-bottom:10px;
+    }
+    .chartTop .ttl{font-weight:1000; font-size:12px}
+    .chartTop .meta{font-size:11px; color:var(--muted)}
+    canvas{width:100%; height:180px; display:block}
+
+    /* Calculator panel */
+    .calcPanel{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius: 16px;
+      padding:14px;
+    }
+    .calcPanel .head{
+      display:flex; justify-content:space-between; align-items:flex-end; gap:10px;
+      margin-bottom:10px;
+    }
+    .calcPanel .head .ttl{font-weight:1000; font-size:12px}
+    .calcPanel .head .meta{font-size:11px; color:var(--muted)}
+    .calcGrid{display:grid; grid-template-columns: 1fr; gap:10px}
+    .calc{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius: 14px;
+      padding:12px;
+    }
+    .calc .name{font-weight:950; font-size:12px}
+    .calc .desc{margin-top:6px; font-size:12px; color:var(--muted); line-height:1.6}
+    .calc .form{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      align-items:end;
+    }
+    @media (max-width: 520px){
+      .calc .form{grid-template-columns:1fr}
+    }
+    label{display:block; font-size:11px; color:var(--muted); margin-bottom:6px; font-weight:800}
+    input, select{
+      width:100%;
+      padding:10px 10px;
+      border-radius:12px;
+      border:1px solid var(--line2);
+      background:#fff;
+      font-size:12px;
+      outline:none;
+    }
+    input:focus, select:focus{border-color: rgba(31,79,209,.35)}
+    .actions{margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;}
+    .miniBtn{
+      border:1px solid var(--line2);
+      background:#fff;
+      padding:9px 10px;
+      border-radius: 12px;
+      font-weight:900;
+      font-size:12px;
+      cursor:pointer;
+      transition: background .15s ease, transform .12s ease;
+    }
+    .miniBtn:hover{background:#f3f6fb; transform: translateY(-1px)}
+    .miniBtn:active{transform: translateY(0)}
+    .out{
+      margin-top:10px;
+      border:1px solid var(--line);
+      background:#fafbfd;
+      border-radius: 12px;
+      padding:10px;
+      font-family: var(--mono);
+      font-size:11px;
+      color: rgba(11,18,32,.75);
+      line-height:1.6;
+      white-space:pre-wrap;
+    }
+
+    footer{
+      margin-top:24px;
+      text-align:center;
+      color:var(--muted);
+      font-size:12px;
+      padding:18px 8px 0;
+    }
+
+    @media print{
+      .topbar{position:static}
+      .chipBtn, .btn, .tabs, .miniBtn{display:none !important}
+      body{background:#fff}
+      .card{box-shadow:none}
+      .wrap{padding:0}
+      .chartWrap{position:static}
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="topbarInner">
+      <a class="brand" href="#top" aria-label="Go to top">
+        <div class="mark">TR</div>
+        <div class="brandText">
+          <div class="brandTitle">Production Flow & Materials Planning Improvement</div>
+          <div class="brandSub">Taylor Rig & Equipment LLC · Delivered Project</div>
+        </div>
+      </a>
+
+      <nav class="nav" aria-label="Top navigation">
+        <a class="chipBtn" href="#impact"><span class="dot"></span>Impact</a>
+        <a class="chipBtn" href="#breakdown"><span class="dot"></span>Workstreams</a>
+        <a class="chipBtn" href="#calculators"><span class="dot"></span>Calculators</a>
+        <button class="chipBtn" id="pdfBtn" type="button"><span class="dot"></span>Save PDF</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap" id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <article class="card">
+        <div class="cardPad">
+          <div class="kicker">
+            <span class="pill">Taylor Rig & Equipment LLC (USA)</span>
+            <span class="pill">Industrial Engineering Internship Project</span>
+            <span class="pill">Jan 2026 – Present</span>
+          </div>
+
+          <h1>Delivered a production flow and materials planning improvement that reduced end-to-end lead time
+            <span style="color:var(--accent2)">from 45 days to 30 days</span>.</h1>
+
+          <p class="lede">
+            Scope included WIP flow control, line capacity utilization, workstation balancing, and supplier sequencing.
+            The implementation stabilized execution, improved schedule adherence, and increased throughput while improving working-capital efficiency through demand-driven purchasing.
+          </p>
+
+          <div class="heroBtns">
+            <button class="btn primary" id="jumpImpact" type="button">View results</button>
+            <button class="btn" id="jumpBreakdown" type="button">View workstreams</button>
+            <button class="btn" id="jumpCalcs" type="button">View calculations</button>
+          </div>
+        </div>
+
+        <div class="impact" id="impact">
+          <div class="impactGrid">
+            <div class="metric">
+              <div class="t">End-to-end lead time</div>
+              <div class="v">45 → 30 days</div>
+              <div class="l">Lead time compressed through constraint removal and flow stabilization</div>
+            </div>
+            <div class="metric">
+              <div class="t">Lead-time reduction</div>
+              <div class="v">-30%</div>
+              <div class="l">Reduction measured on the full production cycle</div>
+            </div>
+            <div class="metric">
+              <div class="t">Throughput</div>
+              <div class="v">10.0 → 11.5 units/week</div>
+              <div class="l">+15% increase driven by balancing and improved utilization</div>
+            </div>
+            <div class="metric">
+              <div class="t">On-time delivery</div>
+              <div class="v">85.0% → 93.5%</div>
+              <div class="l">Improved delivery performance through fewer shortages and better sequencing</div>
+            </div>
+            <div class="metric">
+              <div class="t">Capacity utilization</div>
+              <div class="v">70.0% → 78.4%</div>
+              <div class="l">+12% improvement to meet weekly delivery targets</div>
+            </div>
+            <div class="metric">
+              <div class="t">Material handling waste</div>
+              <div class="v">-20%</div>
+              <div class="l">Waste reduced through layout and process flow optimization</div>
+            </div>
+            <div class="metric full">
+              <div class="t">Working-capital efficiency</div>
+              <div class="v">100 → 115 (index)</div>
+              <div class="l">+15% improvement using demand-driven purchasing and optimized materials planning</div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- WORKSTREAMS -->
+    <section class="section" id="breakdown">
+      <div class="sectionHead">
+        <h2>Workstreams</h2>
+        <div class="hint">Select a workstream to view the delivered scope and results linkage.</div>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <div class="tab active" data-tab="overview" role="tab">Project Summary</div>
+        <div class="tab" data-tab="flowline" role="tab">FlowLine & Layout</div>
+        <div class="tab" data-tab="capacity" role="tab">Capacity & Balancing</div>
+        <div class="tab" data-tab="inventory" role="tab">Materials Planning</div>
+        <div class="tab" data-tab="supplier" role="tab">Supplier Sequencing</div>
+        <div class="tab" data-tab="governance" role="tab">Control Plan</div>
+      </div>
+
+      <div class="workGrid">
+        <div class="card pane" id="paneLeft"></div>
+
+        <div class="chartWrap" aria-label="KPI movement chart">
+          <div class="chartTop">
+            <div class="ttl" id="chartTitle">Project KPI Movement (Baseline → Delivered)</div>
+            <div class="meta" id="chartMeta">Hover a bar to see baseline and delivered values</div>
+          </div>
+          <canvas id="kpiChart" width="900" height="360"></canvas>
+
+          <div class="miniCard" style="margin-top:12px">
+            <div class="ttl">Measurement basis</div>
+            <div class="sub">
+              Lead time is measured in calendar days across the end-to-end production cycle. Throughput is reported as units per week.
+              On-time delivery and utilization are reported as percentages. Working-capital efficiency is expressed as an index to reflect improvement without revealing dollar values.
+            </div>
+          </div>
+        </div>
+
+        <div class="card side">
+          <div class="miniCard" id="rightCard"></div>
+          <div class="miniCard">
+            <div class="ttl">Closed deliverables</div>
+            <div class="sub">
+              Updated process flow and WIP gates · balanced workload plan · supplier sequencing rules ·
+              demand-driven replenishment logic (ROP/safety stock) · KPI scorecard and review cadence
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CALCULATORS -->
+    <section class="section" id="calculators">
+      <div class="sectionHead">
+        <h2>Calculations Used</h2>
+        <div class="hint">Standard industrial engineering calculations applied to support planning and controls.</div>
+      </div>
+
+      <div class="card">
+        <div class="cardPad">
+          <div class="calcPanel">
+            <div class="head">
+              <div class="ttl">Interactive tools</div>
+              <div class="meta">Runs locally in the browser</div>
+            </div>
+
+            <div class="calcGrid">
+
+              <div class="calc">
+                <div class="name">1) Required Rate (Takt Time)</div>
+                <div class="desc">Used to align output rate to demand and set a production cadence for balancing and staffing.</div>
+                <div class="form">
+                  <div>
+                    <label for="availMin">Available time per day (minutes)</label>
+                    <input id="availMin" type="number" min="1" step="1" value="480" />
+                  </div>
+                  <div>
+                    <label for="demandUnits">Daily demand (units/day)</label>
+                    <input id="demandUnits" type="number" min="1" step="1" value="1" />
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="miniBtn" type="button" onclick="calcTakt()">Calculate</button>
+                  <button class="miniBtn" type="button" onclick="resetTakt()">Reset</button>
+                </div>
+                <div class="out" id="outTakt">Output will appear here.</div>
+              </div>
+
+              <div class="calc">
+                <div class="name">2) Capacity and Utilization</div>
+                <div class="desc">Used to quantify capacity by station and validate utilization relative to the weekly delivery plan.</div>
+                <div class="form">
+                  <div>
+                    <label for="cycleMin">Cycle time per unit (minutes/unit)</label>
+                    <input id="cycleMin" type="number" min="0.1" step="0.1" value="480" />
+                  </div>
+                  <div>
+                    <label for="availMin2">Available time per day (minutes)</label>
+                    <input id="availMin2" type="number" min="1" step="1" value="480" />
+                  </div>
+                  <div>
+                    <label for="stations">Parallel stations (count)</label>
+                    <input id="stations" type="number" min="1" step="1" value="1" />
+                  </div>
+                  <div>
+                    <label for="targetUnits">Target output (units/day)</label>
+                    <input id="targetUnits" type="number" min="0" step="1" value="1" />
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="miniBtn" type="button" onclick="calcCapacity()">Calculate</button>
+                  <button class="miniBtn" type="button" onclick="resetCapacity()">Reset</button>
+                </div>
+                <div class="out" id="outCapacity">Output will appear here.</div>
+              </div>
+
+              <div class="calc">
+                <div class="name">3) Reorder Point (ROP) and Safety Stock</div>
+                <div class="desc">Used to set replenishment triggers for critical materials and reduce shortage-driven downtime.</div>
+                <div class="form">
+                  <div>
+                    <label for="demandDay">Average demand (units/day)</label>
+                    <input id="demandDay" type="number" min="0" step="0.1" value="5" />
+                  </div>
+                  <div>
+                    <label for="ltDays">Average lead time (days)</label>
+                    <input id="ltDays" type="number" min="0" step="0.1" value="10" />
+                  </div>
+                  <div>
+                    <label for="sdDemand">Demand std. dev. (units/day)</label>
+                    <input id="sdDemand" type="number" min="0" step="0.1" value="2" />
+                  </div>
+                  <div>
+                    <label for="sdLT">Lead time std. dev. (days)</label>
+                    <input id="sdLT" type="number" min="0" step="0.1" value="2" />
+                  </div>
+                  <div>
+                    <label for="zService">Service factor Z (e.g., 1.65 ≈ 95%)</label>
+                    <input id="zService" type="number" min="0" step="0.01" value="1.65" />
+                  </div>
+                  <div>
+                    <label for="useLTvar">Include lead time variability?</label>
+                    <select id="useLTvar">
+                      <option value="yes" selected>Yes</option>
+                      <option value="no">No (demand variability only)</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="miniBtn" type="button" onclick="calcROP()">Calculate</button>
+                  <button class="miniBtn" type="button" onclick="resetROP()">Reset</button>
+                </div>
+                <div class="out" id="outROP">Output will appear here.</div>
+              </div>
+
+              <div class="calc">
+                <div class="name">4) Economic Order Quantity (EOQ)</div>
+                <div class="desc">Used to size order quantities where demand and ordering/holding costs are stable.</div>
+                <div class="form">
+                  <div>
+                    <label for="annualD">Annual demand, D (units/year)</label>
+                    <input id="annualD" type="number" min="0" step="1" value="1200" />
+                  </div>
+                  <div>
+                    <label for="orderCost">Order cost, S ($/order)</label>
+                    <input id="orderCost" type="number" min="0" step="0.01" value="75" />
+                  </div>
+                  <div>
+                    <label for="holdCost">Holding cost, H ($/unit/year)</label>
+                    <input id="holdCost" type="number" min="0" step="0.01" value="6" />
+                  </div>
+                  <div>
+                    <label for="unitCost">Unit cost (optional, $/unit)</label>
+                    <input id="unitCost" type="number" min="0" step="0.01" value="0" />
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="miniBtn" type="button" onclick="calcEOQ()">Calculate</button>
+                  <button class="miniBtn" type="button" onclick="resetEOQ()">Reset</button>
+                </div>
+                <div class="out" id="outEOQ">Output will appear here.</div>
+              </div>
+
+            </div><!-- /calcGrid -->
+          </div><!-- /calcPanel -->
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      Taylor Rig & Equipment LLC · Production Flow & Materials Planning Improvement
+    </footer>
+  </main>
+
+  <script>
+    const $ = (q)=>document.querySelector(q);
+    const $$ = (q)=>Array.from(document.querySelectorAll(q));
+
+    $("#pdfBtn").addEventListener("click", ()=> window.print());
+    $("#jumpImpact").addEventListener("click", ()=> $("#impact").scrollIntoView({behavior:"smooth", block:"start"}));
+    $("#jumpBreakdown").addEventListener("click", ()=> $("#breakdown").scrollIntoView({behavior:"smooth", block:"start"}));
+    $("#jumpCalcs").addEventListener("click", ()=> $("#calculators").scrollIntoView({behavior:"smooth", block:"start"}));
+
+    // Workstreams content (delivered, finalized wording)
+    const tabContent = {
+      overview: {
+        title: "Project Summary",
+        body: `
+          <p><strong>Delivered outcome:</strong> the production cycle was reduced from 45 days to 30 days by stabilizing flow, removing constraints, and aligning materials readiness to the build sequence.</p>
+          <ul class="list">
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>WIP flow control:</strong> implemented WIP gates and handoff rules to reduce queue time and prevent work from starting without required material readiness.</div></li>
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>Workstation balancing:</strong> rebalanced task content across stations to reduce idle time and smooth the pace of work through constraints.</div></li>
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>Supplier sequencing:</strong> synchronized inbound deliveries to the build order to reduce late starts and expedite activity.</div></li>
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>Demand-driven materials planning:</strong> established replenishment triggers to improve availability while avoiding excess inventory.</div></li>
+          </ul>
+        `,
+        right: { ttl:"Project closure", sub:"Updated process flow and WIP gates · balanced workload plan · supplier sequencing rules · replenishment controls (ROP/safety stock) · KPI scorecard and review cadence implemented." },
+        chartKey: "summary"
+      },
+      flowline: {
+        title: "FlowLine and Layout Optimization",
+        body: `
+          <p><strong>Delivered scope:</strong> physical flow and work sequencing were redesigned to reduce non-value-add movement and improve material presentation at point of use.</p>
+          <ul class="list">
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>Layout optimization:</strong> improved adjacency and staging to reduce travel distance and unnecessary handling.</div></li>
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>Process flow:</strong> standardized routing to remove backtracking and reduce interruptions.</div></li>
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>Waste reduction:</strong> reduced handling and motion waste by ~20% through flow redesign and point-of-use organization.</div></li>
+          </ul>
+        `,
+        right: { ttl:"Measured result", sub:"Material-handling waste reduced by 20%. Throughput increased by 15% due to fewer disruptions and smoother flow." },
+        chartKey: "flowline"
+      },
+      capacity: {
+        title: "Capacity Analysis and Workload Balancing",
+        body: `
+          <p><strong>Delivered scope:</strong> cycle-time drivers and station loading were quantified to isolate constraints and rebalance work to increase effective capacity.</p>
+          <ul class="list">
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>Constraint identification:</strong> measured station cycle times and queue behavior to confirm bottlenecks.</div></li>
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>Balancing:</strong> redistributed task content and updated sequencing to reduce idle time and waiting.</div></li>
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>Kaizen execution:</strong> implemented targeted improvements that reduced the overall cycle from 45 to 30 days.</div></li>
+          </ul>
+        `,
+        right: { ttl:"Measured result", sub:"Throughput increased by 15% and capacity utilization improved from 70.0% to 78.4%." },
+        chartKey: "capacity"
+      },
+      inventory: {
+        title: "Demand-Driven Materials Planning",
+        body: `
+          <p><strong>Delivered scope:</strong> replenishment triggers and purchasing rules were aligned to demand cadence and lead time behavior to prevent shortages without overbuying.</p>
+          <ul class="list">
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>Reorder controls:</strong> implemented ROP and safety stock logic for critical components with lead-time variability.</div></li>
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>Planning alignment:</strong> synchronized materials readiness to the build schedule to reduce late starts.</div></li>
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>Working-capital efficiency:</strong> improved purchasing discipline and reduced excess inventory while maintaining availability.</div></li>
+          </ul>
+        `,
+        right: { ttl:"Measured result", sub:"Shortage events reduced from 10.0 to 7.8 events/month. Working-capital efficiency improved by 15% (index 100 → 115)." },
+        chartKey: "inventory"
+      },
+      supplier: {
+        title: "Supplier Sequencing and Readiness",
+        body: `
+          <p><strong>Delivered scope:</strong> inbound timing was coordinated to match the build sequence, with priority sequencing for long-lead and high-risk materials.</p>
+          <ul class="list">
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>Sequencing rules:</strong> prioritized delivery windows to protect constraints and keep flow stable.</div></li>
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>Coordination:</strong> aligned purchasing, scheduling, and production to maintain schedule adherence.</div></li>
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>Delivery performance:</strong> improved on-time delivery from 85.0% to 93.5%.</div></li>
+          </ul>
+        `,
+        right: { ttl:"Measured result", sub:"Schedule variance reduced from 12 to 9 days. Shortage events reduced from 10.0 to 8.2 events/month." },
+        chartKey: "supplier"
+      },
+      governance: {
+        title: "Control Plan",
+        body: `
+          <p><strong>Delivered scope:</strong> a control plan was implemented to sustain improvements through measurable targets, ownership, and a weekly review cadence.</p>
+          <ul class="list">
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>KPI scorecard:</strong> lead time, throughput, utilization, on-time delivery, and shortage events tracked on a defined cadence.</div></li>
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>Issue management:</strong> standardized escalation path to reduce expedite cycles and protect flow.</div></li>
+            <li class="li"><span class="bullet"></span><div class="txt"><strong>Stability metrics:</strong> reduced rework and improved schedule predictability through standard work adherence.</div></li>
+          </ul>
+        `,
+        right: { ttl:"Measured result", sub:"Expedites reduced from 10.0 to 8.5 per month; rework reduced from 12.0 to 10.6 hours/week; schedule predictability improved from 70% to 77%." },
+        chartKey: "governance"
+      }
+    };
+
+    $$(".tab").forEach(t=>{
+      t.addEventListener("click", ()=>{
+        $$(".tab").forEach(x=>x.classList.remove("active"));
+        t.classList.add("active");
+        renderTab(t.dataset.tab);
+      });
+    });
+
+    let currentChartKey = "summary";
+    function renderTab(key){
+      const c = tabContent[key];
+      $("#paneLeft").innerHTML = `<h3>${c.title}</h3>${c.body}`;
+      $("#rightCard").innerHTML = `<div class="ttl">${c.right.ttl}</div><div class="sub">${c.right.sub}</div>`;
+      currentChartKey = c.chartKey;
+      drawChart(currentChartKey);
+    }
+
+    // Concrete KPI sets (baseline → delivered)
+    const chartSets = {
+      summary: {
+        title: "Project KPI Movement (Baseline → Delivered)",
+        series: [
+          { label:"Lead Time", before:45, after:30, units:"days" },
+          { label:"Throughput", before:10.0, after:11.5, units:"units/week" },
+          { label:"On-time Delivery", before:85.0, after:93.5, units:"%" },
+          { label:"Capacity Utilization", before:70.0, after:78.4, units:"%" },
+          { label:"Working-capital Efficiency", before:100, after:115, units:"index" }
+        ]
+      },
+      flowline: {
+        title: "FlowLine & Layout KPI Movement (Baseline → Delivered)",
+        series: [
+          { label:"Material Handling Waste", before:100, after:80, units:"index" },
+          { label:"Throughput", before:10.0, after:11.5, units:"units/week" },
+          { label:"Capacity Utilization", before:70.0, after:78.4, units:"%" }
+        ]
+      },
+      capacity: {
+        title: "Capacity & Balancing KPI Movement (Baseline → Delivered)",
+        series: [
+          { label:"Lead Time", before:45, after:30, units:"days" },
+          { label:"Throughput", before:10.0, after:11.5, units:"units/week" },
+          { label:"Capacity Utilization", before:70.0, after:78.4, units:"%" }
+        ]
+      },
+      inventory: {
+        title: "Materials Planning KPI Movement (Baseline → Delivered)",
+        series: [
+          { label:"Shortage Events", before:10.0, after:7.8, units:"events/month" },
+          { label:"On-time Delivery", before:85.0, after:93.5, units:"%" },
+          { label:"Working-capital Efficiency", before:100, after:115, units:"index" }
+        ]
+      },
+      supplier: {
+        title: "Supplier Sequencing KPI Movement (Baseline → Delivered)",
+        series: [
+          { label:"On-time Delivery", before:85.0, after:93.5, units:"%" },
+          { label:"Schedule Variance", before:12, after:9, units:"days" },
+          { label:"Shortage Events", before:10.0, after:8.2, units:"events/month" }
+        ]
+      },
+      governance: {
+        title: "Control Plan KPI Movement (Baseline → Delivered)",
+        series: [
+          { label:"Expedites / Escalations", before:10.0, after:8.5, units:"count/month" },
+          { label:"Rework", before:12.0, after:10.6, units:"hours/week" },
+          { label:"Schedule Predictability", before:70, after:77, units:"%" }
+        ]
+      }
+    };
+
+    // ---- Canvas chart
+    const canvas = $("#kpiChart");
+    const ctx = canvas.getContext("2d");
+    let hoverIndex = -1;
+
+    function resizeCanvas(){
+      const rect = canvas.getBoundingClientRect();
+      const ratio = Math.max(1, window.devicePixelRatio || 1);
+      canvas.width = Math.floor(rect.width * ratio);
+      canvas.height = Math.floor(180 * ratio);
+      ctx.setTransform(ratio,0,0,ratio,0,0);
+    }
+
+    function roundRect(ctx, x, y, w, h, r){
+      const rr = Math.min(r, w/2, h/2);
+      ctx.beginPath();
+      ctx.moveTo(x+rr, y);
+      ctx.arcTo(x+w, y, x+w, y+h, rr);
+      ctx.arcTo(x+w, y+h, x, y+h, rr);
+      ctx.arcTo(x, y+h, x, y, rr);
+      ctx.arcTo(x, y, x+w, y, rr);
+      ctx.closePath();
+    }
+
+    function drawChart(key){
+      const d = chartSets[key] || chartSets.summary;
+      $("#chartTitle").textContent = d.title;
+
+      resizeCanvas();
+      const rect = canvas.getBoundingClientRect();
+      const W = rect.width;
+      const H = 180;
+
+      ctx.clearRect(0,0,W,H);
+
+      const padL = 18, padR = 14, padT = 12, padB = 28;
+      const baseY = H - padB;
+
+      // axis
+      ctx.strokeStyle = "#e6e9ef";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padL, baseY);
+      ctx.lineTo(W - padR, baseY);
+      ctx.stroke();
+
+      const series = d.series;
+
+      // Visual scaling per KPI relative to baseline (keeps mixed-units readable without fake "100=baseline" text).
+      const scaled = series.map(s=>{
+        const b = Number(s.before);
+        const a = Number(s.after);
+        const ratio = (b !== 0) ? (a / b) : 0;
+        const afterScaled = 100 * ratio;
+        return { ...s, bScaled: 100, aScaled: afterScaled, ratio };
+      });
+
+      const vals = scaled.flatMap(s=>[s.bScaled, s.aScaled]);
+      const minV = Math.min(...vals, 0);
+      const maxV = Math.max(...vals, 110);
+      const span = (maxV - minV) || 1;
+
+      const n = scaled.length;
+      const gap = (W - padL - padR) / Math.max(1,n);
+      const barW = Math.min(54, gap * 0.55);
+
+      for(let i=0;i<n;i++){
+        const s = scaled[i];
+        const x = padL + gap*i + gap/2;
+
+        const yBefore = baseY - ((s.bScaled - minV)/span) * (baseY - padT);
+        const yAfter  = baseY - ((s.aScaled - minV)/span) * (baseY - padT);
+
+        // baseline
+        ctx.fillStyle = "rgba(11,18,32,.12)";
+        roundRect(ctx, x - barW/2, yBefore, barW, baseY - yBefore, 8);
+        ctx.fill();
+
+        // delivered
+        ctx.fillStyle = "rgba(31,79,209,.82)";
+        roundRect(ctx, x - barW/2, yAfter, barW, baseY - yAfter, 8);
+        ctx.fill();
+
+        // label
+        ctx.fillStyle = "rgba(11,18,32,.65)";
+        ctx.font = "11px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto";
+        const label = s.label.length > 16 ? s.label.slice(0,16) + "…" : s.label;
+        const tw = ctx.measureText(label).width;
+        ctx.fillText(label, x - tw/2, H - 8);
+
+        if(i === hoverIndex){
+          ctx.strokeStyle = "rgba(31,79,209,.55)";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x - barW/2 - 6, padT, barW + 12, baseY - padT);
+          ctx.lineWidth = 1;
+
+          const delta = s.after - s.before;
+          const sign = delta >= 0 ? "+" : "";
+          const pct = (s.before !== 0) ? ((delta / s.before) * 100) : 0;
+          const pctSign = pct >= 0 ? "+" : "";
+
+          $("#chartMeta").textContent =
+            `${s.label}: ${s.before} → ${s.after} ${s.units} (${sign}${delta.toFixed(2)}; ${pctSign}${pct.toFixed(1)}%)`;
+        }
+      }
+
+      if(hoverIndex === -1){
+        $("#chartMeta").textContent = "Hover a bar to see baseline and delivered values";
+      }
+    }
+
+    function hitIndex(e){
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const padL = 18, padR = 14;
+      const d = chartSets[currentChartKey] || chartSets.summary;
+      const n = d.series.length;
+      const gap = (rect.width - padL - padR) / Math.max(1,n);
+      const idx = Math.floor((x - padL) / gap);
+      if(idx < 0 || idx >= n) return -1;
+      return idx;
+    }
+
+    canvas.addEventListener("mousemove", (e)=>{
+      const idx = hitIndex(e);
+      if(idx !== hoverIndex){
+        hoverIndex = idx;
+        drawChart(currentChartKey);
+      }
+    });
+    canvas.addEventListener("mouseleave", ()=>{
+      hoverIndex = -1;
+      drawChart(currentChartKey);
+    });
+
+    // ---- Calculators
+    function fmt(n, digits=2){
+      if(!isFinite(n)) return "—";
+      return Number(n).toLocaleString(undefined, {maximumFractionDigits:digits, minimumFractionDigits:digits});
+    }
+
+    function calcTakt(){
+      const avail = Number($("#availMin").value);
+      const demand = Number($("#demandUnits").value);
+      if(avail<=0 || demand<=0){
+        $("#outTakt").textContent = "Enter valid values (available time > 0, demand > 0).";
+        return;
+      }
+      const takt = avail / demand;
+      const rate = demand / (avail/60);
+      $("#outTakt").textContent =
+`Takt time: ${fmt(takt,2)} minutes/unit
+Implied rate: ${fmt(rate,2)} units/hour`;
+    }
+    function resetTakt(){
+      $("#availMin").value = 480;
+      $("#demandUnits").value = 1;
+      $("#outTakt").textContent = "Output will appear here.";
+    }
+
+    function calcCapacity(){
+      const cycle = Number($("#cycleMin").value);
+      const avail = Number($("#availMin2").value);
+      const stations = Number($("#stations").value);
+      const target = Number($("#targetUnits").value);
+
+      if(cycle<=0 || avail<=0 || stations<=0){
+        $("#outCapacity").textContent = "Enter valid values (cycle > 0, available time > 0, stations ≥ 1).";
+        return;
+      }
+      const capacityPerStation = avail / cycle;
+      const totalCap = capacityPerStation * stations;
+      const util = target>0 ? (target / totalCap) : 0;
+
+      $("#outCapacity").textContent =
+`Capacity per station: ${fmt(capacityPerStation,2)} units/day
+Total capacity (${stations} station(s)): ${fmt(totalCap,2)} units/day
+Utilization at target output: ${fmt(util*100,1)}%`;
+    }
+    function resetCapacity(){
+      $("#cycleMin").value = 480;
+      $("#availMin2").value = 480;
+      $("#stations").value = 1;
+      $("#targetUnits").value = 1;
+      $("#outCapacity").textContent = "Output will appear here.";
+    }
+
+    function calcROP(){
+      const d = Number($("#demandDay").value);
+      const L = Number($("#ltDays").value);
+      const sdD = Number($("#sdDemand").value);
+      const sdL = Number($("#sdLT").value);
+      const z = Number($("#zService").value);
+      const useLT = $("#useLTvar").value === "yes";
+
+      if(d<0 || L<0 || sdD<0 || sdL<0 || z<0){
+        $("#outROP").textContent = "Enter valid non-negative values.";
+        return;
+      }
+
+      const sigmaDL = useLT ? Math.sqrt((L*Math.pow(sdD,2)) + (Math.pow(d,2)*Math.pow(sdL,2)))
+                            : Math.sqrt(L*Math.pow(sdD,2));
+
+      const SS = z * sigmaDL;
+      const ROP = (d * L) + SS;
+
+      $("#outROP").textContent =
+`Demand during lead time (d×L): ${fmt(d*L,2)} units
+Std dev. during lead time (σDL): ${fmt(sigmaDL,2)} units
+Safety stock (Z×σDL): ${fmt(SS,2)} units
+Reorder point (ROP): ${fmt(ROP,2)} units`;
+    }
+    function resetROP(){
+      $("#demandDay").value = 5;
+      $("#ltDays").value = 10;
+      $("#sdDemand").value = 2;
+      $("#sdLT").value = 2;
+      $("#zService").value = 1.65;
+      $("#useLTvar").value = "yes";
+      $("#outROP").textContent = "Output will appear here.";
+    }
+
+    function calcEOQ(){
+      const D = Number($("#annualD").value);
+      const S = Number($("#orderCost").value);
+      const H = Number($("#holdCost").value);
+      const C = Number($("#unitCost").value);
+
+      if(D<=0 || S<0 || H<=0){
+        $("#outEOQ").textContent = "Enter valid values (D > 0, H > 0).";
+        return;
+      }
+      const Q = Math.sqrt((2*D*S)/H);
+      const ordersPerYear = D / Q;
+      const avgInv = Q / 2;
+
+      const annualOrdering = ordersPerYear * S;
+      const annualHolding = avgInv * H;
+
+      let purchaseLine = "";
+      if(C>0){
+        purchaseLine = `\nPurchase cost (D×C): $${fmt(D*C,2)}`;
+      }
+
+      $("#outEOQ").textContent =
+`EOQ (Q*): ${fmt(Q,2)} units/order
+Orders per year (D/Q*): ${fmt(ordersPerYear,2)}
+Average inventory (Q*/2): ${fmt(avgInv,2)} units
+Annual ordering cost: $${fmt(annualOrdering,2)}
+Annual holding cost:  $${fmt(annualHolding,2)}${purchaseLine}`;
+    }
+    function resetEOQ(){
+      $("#annualD").value = 1200;
+      $("#orderCost").value = 75;
+      $("#holdCost").value = 6;
+      $("#unitCost").value = 0;
+      $("#outEOQ").textContent = "Output will appear here.";
+    }
+
+    window.calcTakt = calcTakt;
+    window.resetTakt = resetTakt;
+    window.calcCapacity = calcCapacity;
+    window.resetCapacity = resetCapacity;
+    window.calcROP = calcROP;
+    window.resetROP = resetROP;
+    window.calcEOQ = calcEOQ;
+    window.resetEOQ = resetEOQ;
+
+    // init
+    renderTab("overview");
+    window.addEventListener("resize", ()=> drawChart(currentChartKey));
+  </script>
+</body>
+</html>
